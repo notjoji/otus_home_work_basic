@@ -11,27 +11,27 @@ type Book struct {
 	rate   float32
 }
 
-func (b *Book) GetID() int32 {
+func (b *Book) ID() int32 {
 	return b.id
 }
 
-func (b *Book) GetTitle() string {
+func (b *Book) Title() string {
 	return b.title
 }
 
-func (b *Book) GetAuthor() string {
+func (b *Book) Author() string {
 	return b.author
 }
 
-func (b *Book) GetYear() int32 {
+func (b *Book) Year() int32 {
 	return b.year
 }
 
-func (b *Book) GetSize() int32 {
+func (b *Book) Size() int32 {
 	return b.size
 }
 
-func (b *Book) GetRate() float32 {
+func (b *Book) Rate() float32 {
 	return b.rate
 }
 
@@ -78,11 +78,11 @@ func NewBookComparator(compareBy CompareBy) *BookComparator {
 func (bc *BookComparator) Compare(book1 *Book, book2 *Book) bool {
 	switch bc.compareBy {
 	case Year:
-		return book1.GetYear() > book2.GetYear()
+		return book1.Year() > book2.Year()
 	case Size:
-		return book1.GetSize() > book2.GetSize()
+		return book1.Size() > book2.Size()
 	case Rate:
-		return book1.GetRate() > book2.GetRate()
+		return book1.Rate() > book2.Rate()
 	}
 	return false
 }
@@ -104,8 +104,8 @@ func main() {
 		1077,
 		9.3,
 	}
-	fmt.Printf("1st book is %s by %s\n", book1.GetTitle(), book1.GetAuthor())
-	fmt.Printf("2nd book is %s by %s\n", book2.GetTitle(), book2.GetAuthor())
+	fmt.Printf("1st book is %s by %s\n", book1.Title(), book1.Author())
+	fmt.Printf("2nd book is %s by %s\n", book2.Title(), book2.Author())
 	fmt.Println("Is 1st book newer than 2nd? ", NewBookComparator(Year).Compare(&book1, &book2))
 	fmt.Println("Is 1st book larger than 2nd? ", NewBookComparator(Size).Compare(&book1, &book2))
 	fmt.Println("Has 1st book better rating than 2nd? ", NewBookComparator(Rate).Compare(&book1, &book2))
