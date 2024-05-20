@@ -37,11 +37,7 @@ func (t Triangle) Area() float64 {
 
 func calculateArea(s any) (any, error) {
 	switch obj := s.(type) {
-	case Circle:
-		return obj.Area(), nil
-	case Rectangle:
-		return obj.Area(), nil
-	case Triangle:
+	case Shape:
 		return obj.Area(), nil
 	default:
 		return nil, fmt.Errorf("переданный объект не является фигурой")
