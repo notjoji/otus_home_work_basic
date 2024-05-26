@@ -8,19 +8,21 @@ import (
 	"strings"
 )
 
-func main() {
+func ReadSize() (string, error) {
 	scanner := bufio.NewReader(os.Stdin)
 	text, err := scanner.ReadString('\n')
 	if err != nil {
-		fmt.Println(err)
-		return
+		return "", fmt.Errorf("ошибка при вводе: %s", err)
 	}
-	text = strings.ReplaceAll(text, "\n", "")
-	size, err := strconv.Atoi(text)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	return text, nil
+}
+
+func ReplaceAndAtoi(s string) (int, error) {
+	s = strings.ReplaceAll(s, "\n", "")
+	return strconv.Atoi(s)
+}
+
+func CreateChessboard(size int) string {
 	var result string
 	for i := 0; i < size; i++ {
 		var line string
@@ -33,5 +35,17 @@ func main() {
 		}
 		result += line + "\n"
 	}
-	fmt.Println(result)
+	return result
+}
+
+func main() {
+	text, err := ReadSize()
+	if err != nil {
+		panic(err)
+	}
+	size, err := ReplaceAndAtoi(text)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(CreateChessboard(size))
 }

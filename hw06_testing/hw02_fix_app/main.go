@@ -12,9 +12,11 @@ func main() {
 	path := "data.json"
 
 	fmt.Printf("Enter data file path: ")
-	fmt.Scanln(&path)
+	_, err := fmt.Scanln(&path)
+	if err != nil {
+		panic(err)
+	}
 
-	var err error
 	var staff []types.Employee
 
 	if len(path) == 0 {
@@ -23,7 +25,7 @@ func main() {
 
 	staff, err = reader.ReadJSON(path)
 	if err != nil {
-		fmt.Printf("Error: %v", err)
+		panic(err)
 	}
 
 	printer.PrintStaff(staff)
