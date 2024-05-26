@@ -18,4 +18,5 @@ use (
 	hw06_testing/hw02_fix_app
 	hw06_testing/hw03_chessboard
 	hw06_testing/hw04_struct_comparator
+	hw06_testing/hw05_shapes
 )
