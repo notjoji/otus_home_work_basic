@@ -11,31 +11,31 @@ func TestBinarySearch(t *testing.T) {
 		name   string
 		array  []int
 		target int
-		want   bool
+		want   int
 	}{
 		{
 			"positive case",
 			[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			3,
-			true,
+			2,
 		},
 		{
 			"negative case",
 			[]int{1, 2, 4, 5, 6, 7, 8, 9, 10},
 			3,
-			false,
+			-1,
 		},
 		{
 			"empty array",
 			[]int{},
 			3,
-			false,
+			-1,
 		},
 		{
 			"one element array",
 			[]int{3},
 			3,
-			true,
+			0,
 		},
 	}
 	for _, testCase := range testCases {
