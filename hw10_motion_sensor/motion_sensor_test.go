@@ -11,8 +11,6 @@ func TestCalculateAverage(t *testing.T) {
 	sum := AverageSumChannel(sensor)
 	average := CalculateAverage(sum)
 	assert.Equal(t, len(average), 2)
-	for _, v := range average {
-		assert.GreaterOrEqual(t, v, float32(0))
-		assert.LessOrEqual(t, v, float32(100))
-	}
+	assert.Equal(t, average[0], float32(4.5))
+	assert.Equal(t, average[1], float32(14.5))
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand/v2"
 	"time"
 )
 
@@ -11,9 +10,7 @@ func SensorGeneratorChannel(s int) chan int {
 	go func() {
 		for i := 0; i < s; i++ {
 			time.Sleep(1 * time.Second)
-			x := rand.IntN(100)
-			fmt.Println(x)
-			c <- x
+			c <- i
 		}
 		close(c)
 	}()
