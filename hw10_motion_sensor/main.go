@@ -5,12 +5,28 @@ import (
 	"time"
 )
 
-func SensorGeneratorChannel() chan int {
+func SensorGeneratorChannel(timeout int) chan int {
 	c := make(chan int)
+	out := make(chan bool)
 	go func() {
-		for i := 0; i < 60; i++ {
-			time.Sleep(1 * time.Second)
-			c <- i
+		select {
+		case <-time.After(time.Duration(timeout) * time.Second):
+			fmt.Println("timeout")
+			out <- true
+		}
+	}()
+	go func() {
+		i := 0
+	outerFor:
+		for {
+			select {
+			case <-out:
+				break outerFor
+			default:
+				c <- i
+				time.Sleep(1 * time.Second)
+				i++
+			}
 		}
 		close(c)
 	}()
@@ -45,7 +61,7 @@ func CalculateAverage(sum <-chan float32) []float32 {
 }
 
 func main() {
-	sensor := SensorGeneratorChannel()
+	sensor := SensorGeneratorChannel(60)
 	sum := AverageSumChannel(sensor)
 	CalculateAverage(sum)
 }
