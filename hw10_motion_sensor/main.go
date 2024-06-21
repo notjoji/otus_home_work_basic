@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-func SensorGeneratorChannel(s int) chan int {
+func SensorGeneratorChannel() chan int {
 	c := make(chan int)
 	go func() {
-		for i := 0; i < s; i++ {
+		for i := 0; i < 60; i++ {
 			time.Sleep(1 * time.Second)
 			c <- i
 		}
@@ -20,17 +20,15 @@ func SensorGeneratorChannel(s int) chan int {
 func AverageSumChannel(sensor <-chan int) chan float32 {
 	out := make(chan float32)
 	go func() {
-	outerFor:
-		for {
-			var sum float32
-			for i := 0; i < 10; i++ {
-				s, ok := <-sensor
-				if !ok {
-					break outerFor
-				}
-				sum += float32(s)
+		var sum float32
+		i := 1
+		for v := range sensor {
+			sum += float32(v)
+			if i%10 == 0 {
+				out <- sum / 10
+				sum = 0
 			}
-			out <- sum / 10
+			i++
 		}
 		close(out)
 	}()
@@ -38,20 +36,16 @@ func AverageSumChannel(sensor <-chan int) chan float32 {
 }
 
 func CalculateAverage(sum <-chan float32) []float32 {
-	var res []float32
-	for {
-		s, ok := <-sum
-		if !ok {
-			break
-		}
-		res = append(res, s)
-		fmt.Println("Sum is:", s)
+	res := make([]float32, 0, 6)
+	for v := range sum {
+		res = append(res, v)
+		fmt.Println("Sum is:", v)
 	}
 	return res
 }
 
 func main() {
-	sensor := SensorGeneratorChannel(60)
+	sensor := SensorGeneratorChannel()
 	sum := AverageSumChannel(sensor)
 	CalculateAverage(sum)
 }
