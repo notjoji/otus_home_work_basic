@@ -1,30 +1,36 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"time"
 )
 
-func SensorGeneratorChannel(timeout int) chan int {
+func RandomSensorGeneratorChannel(timeout int) chan int {
 	c := make(chan int)
-	out := make(chan bool)
+	to := time.After(time.Duration(timeout) * time.Second)
 	go func() {
-		time.Sleep(time.Duration(timeout) * time.Second)
-		fmt.Println("timeout")
-		out <- true
-	}()
-	go func() {
-		i := 0
-	outerFor:
 		for {
+			s, _ := rand.Int(rand.Reader, big.NewInt(100))
+			r := int(s.Int64())
 			select {
-			case <-out:
-				break outerFor
-			default:
-				c <- i
+			case <-to:
+				close(c)
+				return
+			case c <- r:
 				time.Sleep(1 * time.Second)
-				i++
 			}
+		}
+	}()
+	return c
+}
+
+func CounterSensorGeneratorChannel() chan int {
+	c := make(chan int)
+	go func() {
+		for i := 0; i < 100; i++ {
+			c <- i
 		}
 		close(c)
 	}()
@@ -59,7 +65,7 @@ func CalculateAverage(sum <-chan float32) []float32 {
 }
 
 func main() {
-	sensor := SensorGeneratorChannel(60)
+	sensor := RandomSensorGeneratorChannel(20)
 	sum := AverageSumChannel(sensor)
 	CalculateAverage(sum)
 }
