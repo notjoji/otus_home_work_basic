@@ -9,11 +9,9 @@ func SensorGeneratorChannel(timeout int) chan int {
 	c := make(chan int)
 	out := make(chan bool)
 	go func() {
-		select {
-		case <-time.After(time.Duration(timeout) * time.Second):
-			fmt.Println("timeout")
-			out <- true
-		}
+		time.Sleep(time.Duration(timeout) * time.Second)
+		fmt.Println("timeout")
+		out <- true
 	}()
 	go func() {
 		i := 0
