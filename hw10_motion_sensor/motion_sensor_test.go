@@ -6,6 +6,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func CounterSensorGeneratorChannel() chan int {
+	c := make(chan int)
+	go func() {
+		for i := 0; i < 100; i++ {
+			c <- i
+		}
+		close(c)
+	}()
+	return c
+}
+
 func TestCalculateAverage(t *testing.T) {
 	sensor := CounterSensorGeneratorChannel()
 	sum := AverageSumChannel(sensor)

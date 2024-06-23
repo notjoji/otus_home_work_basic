@@ -26,17 +26,6 @@ func RandomSensorGeneratorChannel(timeout int) chan int {
 	return c
 }
 
-func CounterSensorGeneratorChannel() chan int {
-	c := make(chan int)
-	go func() {
-		for i := 0; i < 100; i++ {
-			c <- i
-		}
-		close(c)
-	}()
-	return c
-}
-
 func AverageSumChannel(sensor <-chan int) chan float32 {
 	out := make(chan float32)
 	go func() {
