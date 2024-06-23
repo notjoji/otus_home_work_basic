@@ -65,7 +65,7 @@ func CalculateAverage(sum <-chan float32) []float32 {
 }
 
 func main() {
-	sensor := RandomSensorGeneratorChannel(20)
+	sensor := RandomSensorGeneratorChannel(60)
 	sum := AverageSumChannel(sensor)
 	CalculateAverage(sum)
 }
