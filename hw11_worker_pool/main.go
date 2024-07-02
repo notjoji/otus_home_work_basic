@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func InitWorkerPool(size int) int {
+func InitWorkerPool(size int, print bool) int {
 	var x int
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
@@ -17,7 +17,9 @@ func InitWorkerPool(size int) int {
 			mu.Lock()
 			x++
 			mu.Unlock()
-			fmt.Println("x:", x)
+			if print {
+				fmt.Println("x:", x)
+			}
 		}()
 	}
 
@@ -26,5 +28,5 @@ func InitWorkerPool(size int) int {
 }
 
 func main() {
-	fmt.Println("result:", InitWorkerPool(1000))
+	fmt.Println("result:", InitWorkerPool(1000, true))
 }
