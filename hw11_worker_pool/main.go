@@ -16,10 +16,10 @@ func InitWorkerPool(size int, isPrinted bool) int {
 			defer wg.Done()
 			mu.Lock()
 			x++
-			mu.Unlock()
 			if isPrinted {
 				fmt.Println("x:", x)
 			}
+			mu.Unlock()
 		}()
 	}
 
