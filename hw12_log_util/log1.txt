@@ -1,0 +1,8 @@
+info - 2024-07-06 11:45:00 - app start
+info - 2024-07-06 11:45:01 - context load start
+warn - 2024-07-06 11:45:02 - dependency 'x' not found, skipped
+warn - 2024-07-06 11:45:02 - dependency 'y' not found, skipped
+info - 2024-07-06 11:45:02 - context loaded
+info - 2024-07-06 11:45:02 - connecting to external service 127.0.0.1:80
+error - 2024-07-06 11:45:07 - timeout exceeded to 127.0.0.1:80
+info - 2024-07-06 11:45:07 - app shutdown
