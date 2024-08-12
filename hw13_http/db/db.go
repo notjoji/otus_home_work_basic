@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -52,7 +51,7 @@ func Add(data []byte) error {
 func Remove(id string) error {
 	check := WorkerDBInstance.Workers[id]
 	if check == nil {
-		return errors.New(fmt.Sprintf("worker not exist with id=%s", id))
+		return fmt.Errorf("worker not exist with id=%s", id)
 	}
 	delete(WorkerDBInstance.Workers, id)
 	return nil
@@ -74,7 +73,7 @@ func UpdateWorker(oldWorker, newWorker *Worker) *Worker {
 func Update(id string, data []byte) error {
 	check := WorkerDBInstance.Workers[id]
 	if check == nil {
-		return errors.New(fmt.Sprintf("worker not exist with id=%s", id))
+		return fmt.Errorf("worker not exist with id=%s", id)
 	}
 
 	var worker *Worker
@@ -87,7 +86,7 @@ func Update(id string, data []byte) error {
 }
 
 func GetAll() ([]byte, error) {
-	var workers []*Worker
+	workers := make([]*Worker, 0)
 	for _, worker := range WorkerDBInstance.Workers {
 		workers = append(workers, worker)
 	}

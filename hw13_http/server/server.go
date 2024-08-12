@@ -3,8 +3,10 @@ package server
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	Database "github.com/notjoji/otus_home_work_basic/hw13_http/db"
 )
@@ -25,6 +27,9 @@ func WorkersHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 		if r.Method == "POST" {
 			err = Database.Add(request)
@@ -53,18 +58,28 @@ func WorkersHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
 	if response != nil {
 		_, err = w.Write(response)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
 func ListenAndServe() {
-	http.HandleFunc("/workers/", WorkersHandler)
-	err := http.ListenAndServe(":8080", nil)
+	server := &http.Server{
+		Addr:        ":8080",
+		ReadTimeout: time.Second * 3,
+		Handler:     http.HandlerFunc(WorkersHandler),
+	}
+	err := server.ListenAndServe()
 	if err != nil {
-		fmt.Println(fmt.Errorf("http listen err: %v", err))
+		fmt.Println(fmt.Errorf("http listen err: %w", err))
 	}
 }

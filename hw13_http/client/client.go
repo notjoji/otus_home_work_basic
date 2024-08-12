@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,50 +11,65 @@ import (
 	DB "github.com/notjoji/otus_home_work_basic/hw13_http/db"
 )
 
-func GetAll() error {
-	resp, err := http.Get("http://localhost:8080/workers")
+func GetAll(client http.Client) error {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet,
+		"http://localhost:8080/workers/", nil)
 	if err != nil {
-		return fmt.Errorf("request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	result, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read body error: %v", err)
+		return fmt.Errorf("read body error: %w", err)
 	}
 	fmt.Println("GET ALL WORKERS response:", string(result))
 	return nil
 }
 
-func GetById(id string) error {
-	resp, err := http.Get(fmt.Sprintf("http://localhost:8080/workers/%s", id))
+func GetByID(client http.Client, id string) error {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet,
+		fmt.Sprintf("http://localhost:8080/workers/%s", id), nil)
 	if err != nil {
-		return fmt.Errorf("request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	result, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read body error: %v", err)
+		return fmt.Errorf("read body error: %w", err)
 	}
 	fmt.Println("GET WORKER BY ID response:", string(result))
 	return nil
 }
 
-func AddNewWorker(worker DB.Worker) error {
+func AddNewWorker(client http.Client, worker DB.Worker) error {
 	marshalled, err := json.Marshal(worker)
 	if err != nil {
-		return fmt.Errorf("json marshal error: %v", err)
+		return fmt.Errorf("json marshal error: %w", err)
 	}
-	resp, err := http.Post("http://localhost:8080/workers/", "", bytes.NewBuffer(marshalled))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost,
+		"http://localhost:8080/workers/", bytes.NewBuffer(marshalled))
 	if err != nil {
-		return fmt.Errorf("request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	result, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read body error: %v", err)
+		return fmt.Errorf("read body error: %w", err)
 	}
 	fmt.Println("POST NEW WORKER response:", string(result))
 	return nil
@@ -62,52 +78,54 @@ func AddNewWorker(worker DB.Worker) error {
 func UpdateWorker(client http.Client, worker DB.Worker, id string) error {
 	marshalled, err := json.Marshal(worker)
 	if err != nil {
-		return fmt.Errorf("json marshal error: %v", err)
+		return fmt.Errorf("json marshal error: %w", err)
 	}
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:8080/workers/%s", id),
-		bytes.NewBuffer(marshalled))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPut,
+		fmt.Sprintf("http://localhost:8080/workers/%s", id), bytes.NewBuffer(marshalled))
 	if err != nil {
-		return fmt.Errorf("request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	result, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read body error: %v", err)
+		return fmt.Errorf("read body error: %w", err)
 	}
 	fmt.Println("PUT UPDATE WORKER response:", string(result))
 	return nil
 }
 
 func DeleteWorker(client http.Client, id string) error {
-	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("http://localhost:8080/workers/%s", id), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodDelete,
+		fmt.Sprintf("http://localhost:8080/workers/%s", id), nil)
 	if err != nil {
-		return fmt.Errorf("request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	result, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("read body error: %v", err)
+		return fmt.Errorf("read body error: %w", err)
 	}
 	fmt.Println("DELETE WORKER response:", string(result))
 	return nil
 }
 
 func Start() error {
-	err := GetAll()
+	client := http.Client{}
+	err := GetAll(client)
 	if err != nil {
 		return err
 	}
-	err = GetById("2")
+	err = GetByID(client, "2")
 	if err != nil {
 		return err
 	}
@@ -116,11 +134,10 @@ func Start() error {
 		Name:   "Viktor",
 		Salary: 13000,
 	}
-	err = AddNewWorker(newWorker)
+	err = AddNewWorker(client, newWorker)
 	if err != nil {
 		return err
 	}
-	client := http.Client{}
 	updateWorker := DB.Worker{
 		Salary: 17500,
 	}
@@ -128,7 +145,7 @@ func Start() error {
 	if err != nil {
 		return err
 	}
-	err = GetAll()
+	err = GetAll(client)
 	if err != nil {
 		return err
 	}
@@ -136,7 +153,7 @@ func Start() error {
 	if err != nil {
 		return err
 	}
-	err = GetAll()
+	err = GetAll(client)
 	if err != nil {
 		return err
 	}
