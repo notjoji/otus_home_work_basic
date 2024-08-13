@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -25,7 +26,7 @@ func WorkersHandler(w http.ResponseWriter, r *http.Request) {
 	case "POST", "PUT":
 		request, err = io.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusServiceUnavailable)
 			_, err = w.Write([]byte(err.Error()))
 			if err != nil {
 				log.Fatal(err)
@@ -53,10 +54,16 @@ func WorkersHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			_, err = w.Write([]byte("Требуется идентификатор сотрудника!"))
 		}
+	default:
+		err = errors.New("method not allowed")
 	}
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		if err.Error() == "method not allowed" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		_, err = w.Write([]byte(err.Error()))
 		if err != nil {
 			log.Fatal(err)
