@@ -7,7 +7,46 @@ package repository
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const CreateOrder = `-- name: CreateOrder :one
+INSERT INTO Orders (user_id, order_date, total_amount)
+VALUES ($1, $2, $3)
+RETURNING id
+`
+
+type CreateOrderParams struct {
+	UserID      *int64             `db:"user_id" json:"user_id"`
+	OrderDate   pgtype.Timestamptz `db:"order_date" json:"order_date"`
+	TotalAmount int64              `db:"total_amount" json:"total_amount"`
+}
+
+func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (int64, error) {
+	row := q.db.QueryRow(ctx, CreateOrder, arg.UserID, arg.OrderDate, arg.TotalAmount)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const CreateProduct = `-- name: CreateProduct :one
+INSERT INTO Products (name, price)
+VALUES ($1, $2)
+RETURNING id
+`
+
+type CreateProductParams struct {
+	Name  string `db:"name" json:"name"`
+	Price int64  `db:"price" json:"price"`
+}
+
+func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error) {
+	row := q.db.QueryRow(ctx, CreateProduct, arg.Name, arg.Price)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
 
 const CreateUser = `-- name: CreateUser :one
 INSERT INTO Users (name, email, password)
@@ -28,8 +67,35 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 	return id, err
 }
 
+const DeleteOrder = `-- name: DeleteOrder :one
+DELETE
+FROM Orders
+WHERE id = $1
+RETURNING id
+`
+
+func (q *Queries) DeleteOrder(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRow(ctx, DeleteOrder, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
+const DeleteProduct = `-- name: DeleteProduct :one
+DELETE
+FROM Products
+WHERE id = $1
+RETURNING id
+`
+
+func (q *Queries) DeleteProduct(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRow(ctx, DeleteProduct, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
 const DeleteUser = `-- name: DeleteUser :one
-DELETE FROM Users
+DELETE
+FROM Users
 WHERE id = $1
 RETURNING id
 `
@@ -38,6 +104,61 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) (int64, error) {
 	row := q.db.QueryRow(ctx, DeleteUser, id)
 	err := row.Scan(&id)
 	return id, err
+}
+
+const GetOrderById = `-- name: GetOrderById :one
+SELECT DISTINCT o.id, o.user_id, o.order_date, o.total_amount
+FROM Orders o
+WHERE o.id = $1
+`
+
+func (q *Queries) GetOrderById(ctx context.Context, id int64) (*Order, error) {
+	row := q.db.QueryRow(ctx, GetOrderById, id)
+	var i Order
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.OrderDate,
+		&i.TotalAmount,
+	)
+	return &i, err
+}
+
+const GetOrders = `-- name: GetOrders :many
+SELECT o.id, o.user_id, o.order_date, o.total_amount
+FROM Orders o
+ORDER BY o.id
+LIMIT $1 OFFSET $2
+`
+
+type GetOrdersParams struct {
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
+}
+
+func (q *Queries) GetOrders(ctx context.Context, arg GetOrdersParams) ([]*Order, error) {
+	rows, err := q.db.Query(ctx, GetOrders, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*Order{}
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.OrderDate,
+			&i.TotalAmount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const GetOrdersByUserId = `-- name: GetOrdersByUserId :many
@@ -62,6 +183,51 @@ func (q *Queries) GetOrdersByUserId(ctx context.Context, id int64) ([]*Order, er
 			&i.OrderDate,
 			&i.TotalAmount,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const GetProductById = `-- name: GetProductById :one
+SELECT DISTINCT p.id, p.name, p.price
+FROM Products p
+WHERE p.id = $1
+`
+
+func (q *Queries) GetProductById(ctx context.Context, id int64) (*Product, error) {
+	row := q.db.QueryRow(ctx, GetProductById, id)
+	var i Product
+	err := row.Scan(&i.ID, &i.Name, &i.Price)
+	return &i, err
+}
+
+const GetProducts = `-- name: GetProducts :many
+SELECT p.id, p.name, p.price
+FROM Products p
+ORDER BY p.id
+LIMIT $1 OFFSET $2
+`
+
+type GetProductsParams struct {
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
+}
+
+func (q *Queries) GetProducts(ctx context.Context, arg GetProductsParams) ([]*Product, error) {
+	rows, err := q.db.Query(ctx, GetProducts, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*Product{}
+	for rows.Next() {
+		var i Product
+		if err := rows.Scan(&i.ID, &i.Name, &i.Price); err != nil {
 			return nil, err
 		}
 		items = append(items, &i)
@@ -219,8 +385,60 @@ func (q *Queries) GetUsersAndProducts(ctx context.Context, arg GetUsersAndProduc
 	return items, nil
 }
 
+const UpdateOrder = `-- name: UpdateOrder :one
+UPDATE Orders
+SET user_id      = $1,
+    order_date   = $2,
+    total_amount = $3
+WHERE id = $4
+RETURNING id
+`
+
+type UpdateOrderParams struct {
+	UserID      *int64             `db:"user_id" json:"user_id"`
+	OrderDate   pgtype.Timestamptz `db:"order_date" json:"order_date"`
+	TotalAmount int64              `db:"total_amount" json:"total_amount"`
+	ID          int64              `db:"id" json:"id"`
+}
+
+func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) (int64, error) {
+	row := q.db.QueryRow(ctx, UpdateOrder,
+		arg.UserID,
+		arg.OrderDate,
+		arg.TotalAmount,
+		arg.ID,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const UpdateProduct = `-- name: UpdateProduct :one
+UPDATE Products
+SET name  = $1,
+    price = $2
+WHERE id = $3
+RETURNING id
+`
+
+type UpdateProductParams struct {
+	Name  string `db:"name" json:"name"`
+	Price int64  `db:"price" json:"price"`
+	ID    int64  `db:"id" json:"id"`
+}
+
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error) {
+	row := q.db.QueryRow(ctx, UpdateProduct, arg.Name, arg.Price, arg.ID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const UpdateUser = `-- name: UpdateUser :one
-UPDATE Users SET name = $1, email = $2, password = $3
+UPDATE Users
+SET name     = $1,
+    email    = $2,
+    password = $3
 WHERE id = $4
 RETURNING id
 `

@@ -9,13 +9,23 @@ import (
 )
 
 type Querier interface {
+	CreateOrder(ctx context.Context, arg CreateOrderParams) (int64, error)
+	CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
+	DeleteOrder(ctx context.Context, id int64) (int64, error)
+	DeleteProduct(ctx context.Context, id int64) (int64, error)
 	DeleteUser(ctx context.Context, id int64) (int64, error)
+	GetOrderById(ctx context.Context, id int64) (*Order, error)
+	GetOrders(ctx context.Context, arg GetOrdersParams) ([]*Order, error)
 	GetOrdersByUserId(ctx context.Context, id int64) ([]*Order, error)
+	GetProductById(ctx context.Context, id int64) (*Product, error)
+	GetProducts(ctx context.Context, arg GetProductsParams) ([]*Product, error)
 	GetUserById(ctx context.Context, id int64) (*User, error)
 	GetUserStatistics(ctx context.Context) ([]*GetUserStatisticsRow, error)
 	GetUsers(ctx context.Context, arg GetUsersParams) ([]*User, error)
 	GetUsersAndProducts(ctx context.Context, arg GetUsersAndProductsParams) ([]*GetUsersAndProductsRow, error)
+	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (int64, error)
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, error)
 }
 

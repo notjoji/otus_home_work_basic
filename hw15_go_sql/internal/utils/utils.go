@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func ResponseJSON(w http.ResponseWriter, v []byte) {
@@ -37,18 +36,6 @@ func GetPageableParams(r *http.Request) (int64, int64, error) {
 	}
 
 	return limit, offset, nil
-}
-
-func GetNumericPathParam(r *http.Request, methodPrefix string, parameter string) (int, error) {
-	param := strings.TrimPrefix(r.URL.Path, methodPrefix)
-	if param == "" {
-		return 0, fmt.Errorf("path parameter '%s' is required", parameter)
-	}
-	intParam, err := strconv.Atoi(param)
-	if err != nil {
-		return 0, fmt.Errorf("path parameter '%s' is invalid", parameter)
-	}
-	return intParam, nil
 }
 
 func GetNumericQueryParam(r *http.Request, parameter string) (int, error) {

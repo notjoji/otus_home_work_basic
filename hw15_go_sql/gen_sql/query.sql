@@ -54,3 +54,62 @@ DELETE
 FROM Users
 WHERE id = $1
 RETURNING id;
+
+-- name: GetOrders :many
+SELECT o.*
+FROM Orders o
+ORDER BY o.id
+LIMIT $1 OFFSET $2;
+
+-- name: GetOrderById :one
+SELECT DISTINCT o.*
+FROM Orders o
+WHERE o.id = $1;
+
+-- name: CreateOrder :one
+INSERT INTO Orders (user_id, order_date, total_amount)
+VALUES ($1, $2, $3)
+RETURNING id;
+
+-- name: UpdateOrder :one
+UPDATE Orders
+SET user_id      = $1,
+    order_date   = $2,
+    total_amount = $3
+WHERE id = $4
+RETURNING id;
+
+-- name: DeleteOrder :one
+DELETE
+FROM Orders
+WHERE id = $1
+RETURNING id;
+
+-- name: GetProducts :many
+SELECT p.*
+FROM Products p
+ORDER BY p.id
+LIMIT $1 OFFSET $2;
+
+-- name: GetProductById :one
+SELECT DISTINCT p.*
+FROM Products p
+WHERE p.id = $1;
+
+-- name: CreateProduct :one
+INSERT INTO Products (name, price)
+VALUES ($1, $2)
+RETURNING id;
+
+-- name: UpdateProduct :one
+UPDATE Products
+SET name  = $1,
+    price = $2
+WHERE id = $3
+RETURNING id;
+
+-- name: DeleteProduct :one
+DELETE
+FROM Products
+WHERE id = $1
+RETURNING id;
