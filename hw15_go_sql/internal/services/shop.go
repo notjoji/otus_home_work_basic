@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/internal/repository"
@@ -14,18 +13,20 @@ import (
 )
 
 func GetOrdersByUser(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+	if r.Method != http.MethodGet {
+		utils.ResponseJSON(w, []byte(`{"success": false, "msg": "GET method is required"}`))
+		return
+	}
 
-	userIDParam := r.URL.Query().Get("userID")
-	if userIDParam == "" {
-		utils.ResponseJSON(w, []byte(`{"success": false,"msg": "Query parameter 'userID' is required"}`))
-		return
-	}
-	userID, err := strconv.Atoi(userIDParam)
+	userID, err := utils.GetNumericQueryParam(r, "userID")
 	if err != nil {
-		utils.ResponseJSON(w, []byte(`{"success": false,"msg": "Parameter 'userID' is invalid"}`))
+		utils.ResponseJSON(w, []byte(
+			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
+		))
 		return
 	}
+
+	ctx := context.Background()
 
 	tx, err := pgdb.DB.Conn().BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
 	if err != nil {
@@ -42,44 +43,36 @@ func GetOrdersByUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resulByte, err := json.Marshal(result)
+	resultByte, err := json.Marshal(result)
 	if err != nil {
 		utils.ResponseJSON(w, []byte(
 			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
 		))
 		return
 	}
-	utils.ResponseJSON(w, resulByte)
+	utils.ResponseJSON(w, resultByte)
 }
 
 func GetUsersAndProducts(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-
-	limitParam := r.URL.Query().Get("limit")
-	offsetParam := r.URL.Query().Get("offset")
-
-	limit := int64(5)
-	offset := int64(0)
-	var err error
-	if limitParam != "" {
-		limit, err = strconv.ParseInt(limitParam, 10, 64)
-		if err != nil {
-			utils.ResponseJSON(w, []byte(`{"success": false,"msg": "Parameter 'limit' is invalid"}`))
-			return
-		}
+	if r.Method != http.MethodGet {
+		utils.ResponseJSON(w, []byte(`{"success": false, "msg": "GET method is required"}`))
+		return
 	}
-	if offsetParam != "" {
-		offset, err = strconv.ParseInt(offsetParam, 10, 64)
-		if err != nil {
-			utils.ResponseJSON(w, []byte(`{"success": false,"msg": "Parameter 'offset' is invalid"}`))
-			return
-		}
+
+	limit, offset, err := utils.GetPageableParams(r)
+	if err != nil {
+		utils.ResponseJSON(w, []byte(
+			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
+		))
+		return
 	}
 
 	params := repository.GetUsersAndProductsParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	}
+
+	ctx := context.Background()
 
 	tx, err := pgdb.DB.Conn().BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
 	if err != nil {
@@ -96,17 +89,22 @@ func GetUsersAndProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resulByte, err := json.Marshal(result)
+	resultByte, err := json.Marshal(result)
 	if err != nil {
 		utils.ResponseJSON(w, []byte(
 			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
 		))
 		return
 	}
-	utils.ResponseJSON(w, resulByte)
+	utils.ResponseJSON(w, resultByte)
 }
 
-func GetUserStatistics(w http.ResponseWriter, _ *http.Request) {
+func GetUserStatistics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		utils.ResponseJSON(w, []byte(`{"success": false, "msg": "GET method is required"}`))
+		return
+	}
+
 	ctx := context.Background()
 
 	tx, err := pgdb.DB.Conn().BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
@@ -124,12 +122,12 @@ func GetUserStatistics(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	resulByte, err := json.Marshal(result)
+	resultByte, err := json.Marshal(result)
 	if err != nil {
 		utils.ResponseJSON(w, []byte(
 			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
 		))
 		return
 	}
-	utils.ResponseJSON(w, resulByte)
+	utils.ResponseJSON(w, resultByte)
 }

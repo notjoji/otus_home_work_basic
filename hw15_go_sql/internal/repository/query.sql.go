@@ -9,6 +9,37 @@ import (
 	"context"
 )
 
+const CreateUser = `-- name: CreateUser :one
+INSERT INTO Users (name, email, password)
+VALUES ($1, $2, $3)
+RETURNING id
+`
+
+type CreateUserParams struct {
+	Name     string `db:"name" json:"name"`
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+	row := q.db.QueryRow(ctx, CreateUser, arg.Name, arg.Email, arg.Password)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const DeleteUser = `-- name: DeleteUser :one
+DELETE FROM Users
+WHERE id = $1
+RETURNING id
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRow(ctx, DeleteUser, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
 const GetOrdersByUserId = `-- name: GetOrdersByUserId :many
 SELECT o.id, o.user_id, o.order_date, o.total_amount
 FROM Orders o
@@ -39,6 +70,24 @@ func (q *Queries) GetOrdersByUserId(ctx context.Context, id int64) ([]*Order, er
 		return nil, err
 	}
 	return items, nil
+}
+
+const GetUserById = `-- name: GetUserById :one
+SELECT DISTINCT u.id, u.name, u.email, u.password
+FROM Users u
+WHERE u.id = $1
+`
+
+func (q *Queries) GetUserById(ctx context.Context, id int64) (*User, error) {
+	row := q.db.QueryRow(ctx, GetUserById, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+	)
+	return &i, err
 }
 
 const GetUserStatistics = `-- name: GetUserStatistics :many
@@ -72,6 +121,43 @@ func (q *Queries) GetUserStatistics(ctx context.Context) ([]*GetUserStatisticsRo
 			&i.Ordernumber,
 			&i.Ordertotalsum,
 			&i.Avgsum,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const GetUsers = `-- name: GetUsers :many
+SELECT u.id, u.name, u.email, u.password
+FROM Users u
+ORDER BY u.id
+LIMIT $1 OFFSET $2
+`
+
+type GetUsersParams struct {
+	Limit  int32 `db:"limit" json:"limit"`
+	Offset int32 `db:"offset" json:"offset"`
+}
+
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]*User, error) {
+	rows, err := q.db.Query(ctx, GetUsers, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.Password,
 		); err != nil {
 			return nil, err
 		}
@@ -131,4 +217,29 @@ func (q *Queries) GetUsersAndProducts(ctx context.Context, arg GetUsersAndProduc
 		return nil, err
 	}
 	return items, nil
+}
+
+const UpdateUser = `-- name: UpdateUser :one
+UPDATE Users SET name = $1, email = $2, password = $3
+WHERE id = $4
+RETURNING id
+`
+
+type UpdateUserParams struct {
+	Name     string `db:"name" json:"name"`
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password"`
+	ID       int64  `db:"id" json:"id"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, error) {
+	row := q.db.QueryRow(ctx, UpdateUser,
+		arg.Name,
+		arg.Email,
+		arg.Password,
+		arg.ID,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }

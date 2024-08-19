@@ -24,3 +24,33 @@ SELECT u.name,
 FROM Users u
          JOIN Orders o ON o.user_id = u.id
 GROUP BY u.name;
+
+-- name: GetUsers :many
+SELECT u.*
+FROM Users u
+ORDER BY u.id
+LIMIT $1 OFFSET $2;
+
+-- name: GetUserById :one
+SELECT DISTINCT u.*
+FROM Users u
+WHERE u.id = $1;
+
+-- name: CreateUser :one
+INSERT INTO Users (name, email, password)
+VALUES ($1, $2, $3)
+RETURNING id;
+
+-- name: UpdateUser :one
+UPDATE Users
+SET name     = $1,
+    email    = $2,
+    password = $3
+WHERE id = $4
+RETURNING id;
+
+-- name: DeleteUser :one
+DELETE
+FROM Users
+WHERE id = $1
+RETURNING id;

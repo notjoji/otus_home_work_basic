@@ -7,18 +7,24 @@ import (
 )
 
 func Router(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		utils.ResponseJSON(w, []byte(`{"success": false, "msg": "GET method is required"}`))
-		return
-	}
-
 	switch r.URL.Path {
-	case "/api/getOrdersByUser":
+	case "/api/shop/getOrdersByUser":
 		GetOrdersByUser(w, r)
-	case "/api/getUsersAndProducts":
+	case "/api/shop/getUsersAndProducts":
 		GetUsersAndProducts(w, r)
-	case "/api/getUserStatistics":
+	case "/api/shop/getUserStatistics":
 		GetUserStatistics(w, r)
+
+	case "/api/users/getAll":
+		GetUsers(w, r)
+	case "/api/users/getByID":
+		GetUserByID(w, r)
+	case "/api/users/update":
+		UpdateUser(w, r)
+	case "/api/users/create":
+		CreateUser(w, r)
+	case "/api/users/deleteByID":
+		DeleteUser(w, r)
 	default:
 		utils.ResponseJSON(w, []byte(`{"success": false, "msg": "Method is not supported"}`))
 	}
