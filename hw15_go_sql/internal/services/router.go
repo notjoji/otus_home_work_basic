@@ -11,12 +11,12 @@ func Router(w http.ResponseWriter, r *http.Request) {
 	case "/api/shop/getOrdersByUser":
 		GetOrdersByUser(w, r)
 	case "/api/shop/getUsersAndProducts":
-		GetUsersAndProducts(w, r)
+		GetPageableEntities(w, r, UsersAndProducts)
 	case "/api/shop/getUserStatistics":
 		GetUserStatistics(w, r)
 
 	case "/api/users/getAll":
-		GetUsers(w, r)
+		GetPageableEntities(w, r, Users)
 	case "/api/users/getByID":
 		GetUserByID(w, r)
 	case "/api/users/update":

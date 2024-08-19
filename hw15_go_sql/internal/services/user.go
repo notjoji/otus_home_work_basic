@@ -13,59 +13,13 @@ import (
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/pkg/pgdb"
 )
 
-func GetUsers(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		utils.ResponseJSON(w, []byte(`{"success": false, "msg": "GET method is required"}`))
-		return
-	}
-
-	limit, offset, err := utils.GetPageableParams(r)
-	if err != nil {
-		utils.ResponseJSON(w, []byte(
-			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
-		))
-		return
-	}
-
-	params := repository.GetUsersParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
-	}
-
-	ctx := context.Background()
-
-	tx, err := pgdb.DB.Conn().BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
-	if err != nil {
-		utils.ResponseJSON(w, []byte(`{"success": false,"msg": "Transaction begin failed"}`))
-		return
-	}
-	repo := repository.New(pgdb.DB.Conn()).WithTx(tx)
-
-	result, err := repo.GetUsers(ctx, params)
-	if err != nil {
-		utils.ResponseJSON(w, []byte(
-			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
-		))
-		return
-	}
-
-	resultByte, err := json.Marshal(result)
-	if err != nil {
-		utils.ResponseJSON(w, []byte(
-			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
-		))
-		return
-	}
-	utils.ResponseJSON(w, resultByte)
-}
-
 func GetUserByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		utils.ResponseJSON(w, []byte(`{"success": false, "msg": "GET method is required"}`))
 		return
 	}
 
-	userID, err := utils.GetNumericPathParam(r, "/api/getUserByID/", "userID")
+	userID, err := utils.GetNumericQueryParam(r, "userID")
 	if err != nil {
 		utils.ResponseJSON(w, []byte(
 			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
@@ -75,12 +29,7 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
 
-	tx, err := pgdb.DB.Conn().BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
-	if err != nil {
-		utils.ResponseJSON(w, []byte(`{"success": false,"msg": "Transaction begin failed"}`))
-		return
-	}
-	repo := repository.New(pgdb.DB.Conn()).WithTx(tx)
+	repo := repository.New(pgdb.DB.Conn())
 
 	result, err := repo.GetUserById(ctx, int64(userID))
 	if err != nil {
@@ -135,6 +84,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		))
 		return
 	}
+	_ = tx.Commit(ctx)
 
 	utils.ResponseJSON(w, []byte(
 		fmt.Sprintf(`{"success": true,"msg": "User updated, id=%d"}`, params.ID),
@@ -176,6 +126,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		))
 		return
 	}
+	_ = tx.Commit(ctx)
 
 	utils.ResponseJSON(w, []byte(
 		fmt.Sprintf(`{"success": true,"msg": "User created, id=%d"}`, id),
@@ -188,7 +139,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := utils.GetNumericPathParam(r, "/api/deleteUserByID/", "userID")
+	userID, err := utils.GetNumericQueryParam(r, "userID")
 	if err != nil {
 		utils.ResponseJSON(w, []byte(
 			fmt.Sprintf(`{"success": false,"msg": "%s"}`, err.Error()),
@@ -212,8 +163,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		))
 		return
 	}
+	_ = tx.Commit(ctx)
 
 	utils.ResponseJSON(w, []byte(
-		fmt.Sprintf(`{"success": true,"msg": "User created, id=%d"}`, userID),
+		fmt.Sprintf(`{"success": true,"msg": "User deleted, id=%d"}`, userID),
 	))
 }
