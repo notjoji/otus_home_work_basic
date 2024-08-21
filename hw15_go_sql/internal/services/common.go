@@ -8,9 +8,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgtype"
-
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/internal/repository"
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/internal/utils"
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/pkg/pgdb"

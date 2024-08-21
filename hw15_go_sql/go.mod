@@ -1,8 +1,6 @@
 module github.com/notjoji/otus_home_work_basic/hw15_go_sql
 
-go 1.21
-
-toolchain go1.22.2
+go 1.20
 
 require (
 	github.com/jackc/pgx/v5 v5.6.0
