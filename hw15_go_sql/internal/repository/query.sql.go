@@ -30,6 +30,24 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (int64
 	return id, err
 }
 
+const CreateOrderProduct = `-- name: CreateOrderProduct :one
+INSERT INTO orderproducts (order_id, product_id)
+VALUES ($1, $2)
+RETURNING order_id
+`
+
+type CreateOrderProductParams struct {
+	OrderID   *int64 `db:"order_id" json:"order_id"`
+	ProductID *int64 `db:"product_id" json:"product_id"`
+}
+
+func (q *Queries) CreateOrderProduct(ctx context.Context, arg CreateOrderProductParams) (*int64, error) {
+	row := q.db.QueryRow(ctx, CreateOrderProduct, arg.OrderID, arg.ProductID)
+	var order_id *int64
+	err := row.Scan(&order_id)
+	return order_id, err
+}
+
 const CreateProduct = `-- name: CreateProduct :one
 INSERT INTO Products (name, price)
 VALUES ($1, $2)

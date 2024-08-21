@@ -8,11 +8,39 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/internal/repository"
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/internal/utils"
 	"github.com/notjoji/otus_home_work_basic/hw15_go_sql/pkg/pgdb"
 )
+
+type CreateOrderWithProducts struct {
+	UserID      *int64             `db:"user_id" json:"userId"`
+	OrderDate   pgtype.Timestamptz `db:"order_date" json:"orderDate"`
+	TotalAmount int64              `db:"total_amount" json:"totalAmount"`
+	ProductIDs  []*int64           `json:"productIds"`
+}
+
+func (req CreateOrderWithProducts) Map() repository.CreateOrderParams {
+	return repository.CreateOrderParams{
+		UserID:      req.UserID,
+		OrderDate:   req.OrderDate,
+		TotalAmount: req.TotalAmount,
+	}
+}
+
+func CreateOrderProductParams(orderID *int64, productIDs []*int64) []repository.CreateOrderProductParams {
+	result := make([]repository.CreateOrderProductParams, len(productIDs))
+	for i, id := range productIDs {
+		result[i] = repository.CreateOrderProductParams{
+			ProductID: id,
+			OrderID:   orderID,
+		}
+	}
+	return result
+}
 
 func GetPageableEntities(w http.ResponseWriter, r *http.Request, method MethodAPI) {
 	if r.Method != http.MethodGet {
@@ -239,13 +267,29 @@ func CreateEntity(w http.ResponseWriter, r *http.Request, method MethodAPI) {
 		}
 	case Orders:
 		{
-			var params repository.CreateOrderParams
+			var params CreateOrderWithProducts
 			err = json.Unmarshal(request, &params)
 			if err != nil {
 				utils.ResponseJSON(w, []byte(`{"success": false,"msg": "Cannot unmarshal request"}`))
 				return
 			}
-			id, methodError = repo.CreateOrder(ctx, params)
+			id, methodError = repo.CreateOrder(ctx, params.Map())
+
+			if methodError != nil {
+				utils.ResponseJSON(w, []byte(
+					fmt.Sprintf(`{"success": false,"msg": "%s"}`, methodError.Error()),
+				))
+				return
+			}
+
+			orderProducts := CreateOrderProductParams(&id, params.ProductIDs)
+			for _, orderProduct := range orderProducts {
+				_, methodError = repo.CreateOrderProduct(ctx, orderProduct)
+				if methodError != nil {
+					break
+				}
+			}
+
 			msg = fmt.Sprintf(`"Order created, id=%d"`, id)
 		}
 	case Products:
@@ -264,6 +308,7 @@ func CreateEntity(w http.ResponseWriter, r *http.Request, method MethodAPI) {
 	}
 
 	if methodError != nil {
+		_ = tx.Rollback(ctx)
 		utils.ResponseJSON(w, []byte(
 			fmt.Sprintf(`{"success": false,"msg": "%s"}`, methodError.Error()),
 		))

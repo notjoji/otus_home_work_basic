@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (int64, error)
+	CreateOrderProduct(ctx context.Context, arg CreateOrderProductParams) (*int64, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
 	DeleteOrder(ctx context.Context, id int64) (int64, error)

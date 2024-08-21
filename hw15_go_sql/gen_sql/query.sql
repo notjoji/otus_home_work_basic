@@ -113,3 +113,8 @@ DELETE
 FROM Products
 WHERE id = $1
 RETURNING id;
+
+-- name: CreateOrderProduct :one
+INSERT INTO orderproducts (order_id, product_id)
+VALUES ($1, $2)
+RETURNING order_id;
