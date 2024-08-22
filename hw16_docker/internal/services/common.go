@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
-	"github.com/notjoji/otus_home_work_basic/hw16_docker/internal/repository"
-	"github.com/notjoji/otus_home_work_basic/hw16_docker/internal/utils"
-	"github.com/notjoji/otus_home_work_basic/hw16_docker/pkg/pgdb"
 	"io"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/notjoji/otus_home_work_basic/hw16_docker/internal/repository"
+	"github.com/notjoji/otus_home_work_basic/hw16_docker/internal/utils"
+	"github.com/notjoji/otus_home_work_basic/hw16_docker/pkg/pgdb"
 )
 
 type CreateOrderWithProducts struct {

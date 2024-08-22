@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/notjoji/otus_home_work_basic/hw16_docker/internal/repository"
 	"github.com/notjoji/otus_home_work_basic/hw16_docker/internal/utils"
 	"github.com/notjoji/otus_home_work_basic/hw16_docker/pkg/pgdb"
-	"net/http"
 )
 
 type MethodAPI int
