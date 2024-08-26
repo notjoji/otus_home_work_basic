@@ -33,7 +33,7 @@ func MapFromProto(b *book.Book) Book {
 	}
 }
 
-func MapToProto(b Book) *book.Book {
+func MapToProto(b *Book) *book.Book {
 	return &book.Book{
 		Id:     b.ID,
 		Title:  b.Title,
@@ -45,7 +45,7 @@ func MapToProto(b Book) *book.Book {
 }
 
 func (b *Book) MarshalJSON() ([]byte, error) {
-	protoBook := MapToProto(*b)
+	protoBook := MapToProto(b)
 	return json.Marshal(&protoBook)
 }
 
@@ -59,34 +59,43 @@ func (b *Book) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func MarshalToJSON(arr []Book) ([]byte, error) {
-	return json.Marshal(arr)
+func MarshalToJSON(arr []*book.Book) ([]byte, error) {
+	books := make([]Book, len(arr))
+	for i, b := range arr {
+		books[i] = MapFromProto(b)
+	}
+	return json.Marshal(books)
 }
 
-func UnmarshalFromJSON(data []byte) ([]*Book, error) {
-	res := make([]*Book, 0)
-	err := json.Unmarshal(data, &res)
+func UnmarshalFromJSON(data []byte) ([]*book.Book, error) {
+	books := make([]*Book, 0)
+	err := json.Unmarshal(data, &books)
+
+	res := make([]*book.Book, len(books))
+	for i, b := range books {
+		res[i] = MapToProto(b)
+	}
 	return res, err
 }
 
 func main() {
-	b1 := Book{
-		ID:     1,
+	b1 := &book.Book{
+		Id:     1,
 		Title:  "A Game Of Thrones (A Song of Ice and Fire)",
 		Author: "George RR Martin",
 		Year:   1997,
 		Size:   694,
 		Rate:   9.1,
 	}
-	b2 := Book{
-		ID:     2,
+	b2 := &book.Book{
+		Id:     2,
 		Title:  "The Lord of the Rings",
 		Author: "John R.R. Tolkien",
 		Year:   1954,
 		Size:   1820,
 		Rate:   9.3,
 	}
-	books := []Book{b1, b2}
+	books := []*book.Book{b1, b2}
 	marshalled, err := MarshalToJSON(books)
 	if err != nil {
 		log.Fatal(err)
