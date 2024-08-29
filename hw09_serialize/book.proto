@@ -9,3 +9,6 @@ message Book {
   int32 size = 5;
   float rate = 6;
 }
+message Books {
+  repeated Book books = 1;
+}

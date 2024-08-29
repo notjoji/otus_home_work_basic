@@ -59,15 +59,15 @@ func (b *Book) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func MarshalToJSON(arr []*book.Book) ([]byte, error) {
-	books := make([]Book, len(arr))
-	for i, b := range arr {
+func MarshalToJSON(protoBooks *book.Books) ([]byte, error) {
+	books := make([]Book, len(protoBooks.Books))
+	for i, b := range protoBooks.Books {
 		books[i] = MapFromProto(b)
 	}
 	return json.Marshal(books)
 }
 
-func UnmarshalFromJSON(data []byte) ([]*book.Book, error) {
+func UnmarshalFromJSON(data []byte) (book.Books, error) {
 	books := make([]*Book, 0)
 	err := json.Unmarshal(data, &books)
 
@@ -75,7 +75,7 @@ func UnmarshalFromJSON(data []byte) ([]*book.Book, error) {
 	for i, b := range books {
 		res[i] = MapToProto(b)
 	}
-	return res, err
+	return book.Books{Books: res}, err
 }
 
 func main() {
@@ -96,7 +96,8 @@ func main() {
 		Rate:   9.3,
 	}
 	books := []*book.Book{b1, b2}
-	marshalled, err := MarshalToJSON(books)
+	protoBooks := &book.Books{Books: books}
+	marshalled, err := MarshalToJSON(protoBooks)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -108,7 +109,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	for _, b := range unmarshalled {
+	for _, b := range unmarshalled.GetBooks() {
 		fmt.Println("Book:", b.String())
 	}
 }

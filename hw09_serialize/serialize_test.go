@@ -25,7 +25,8 @@ func TestSerialize(t *testing.T) {
 		Rate:   9.3,
 	}
 	books := []*book.Book{b1, b2}
-	marshalled, err := MarshalToJSON(books)
+	protoBooks := &book.Books{Books: books}
+	marshalled, err := MarshalToJSON(protoBooks)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, marshalled)
 	assert.Equal(t,
@@ -36,7 +37,7 @@ func TestSerialize(t *testing.T) {
 	unmarshalled, err := UnmarshalFromJSON(marshalled)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, marshalled)
-	for i, b := range unmarshalled {
+	for i, b := range unmarshalled.GetBooks() {
 		assert.Equal(t, b.Id, books[i].Id)
 		assert.Equal(t, b.Title, books[i].Title)
 		assert.Equal(t, b.Author, books[i].Author)
